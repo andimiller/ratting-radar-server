@@ -11,13 +11,16 @@ object Main extends StreamApp[IO] {
   val port: Int = envOrNone("HTTP_PORT").fold(8080)(_.toInt)
 
   override def stream(args: List[String], requestShutdown: IO[Unit]): Stream[IO, Nothing] =
-    Scheduler[IO](corePoolSize = 8).flatMap { scheduler =>
-      val res = new Resource(scheduler)
-      BlazeBuilder[IO]
-        .bindHttp(8080)
-        .withWebSockets(true)
-        .mountService(res.service(scheduler), "/")
-        .serve
-    }
+    for {
+      scheduler <- Stream.eval(IO { Scheduler[IO](corePoolSize = 8) })
+      resource  <- Resource.build(scheduler)
+      server <- Scheduler[IO](corePoolSize = 8).flatMap { scheduler =>
+        BlazeBuilder[IO]
+          .bindHttp(port)
+          .withWebSockets(true)
+          .mountService(resource, "/")
+          .serve
+      }
+    } yield (server)
 
 }
