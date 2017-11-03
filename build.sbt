@@ -14,5 +14,6 @@ libraryDependencies ++= Seq(
   "eveapi"       %% "esi-client"          % esiClientVersion,
   "org.http4s"   %% "http4s-blaze-server" % http4sVersion,
   "org.tpolecat" %% "doobie-core"         % doobieVersion,
-  "org.xerial"   % "sqlite-jdbc"          % "3.20.1"
+  "org.xerial"   % "sqlite-jdbc"          % "3.20.1",
+  "org.slf4j"    % "slf4j-simple"         % "1.7.25"
 )
