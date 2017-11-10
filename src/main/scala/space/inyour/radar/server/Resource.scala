@@ -8,6 +8,7 @@ import org.http4s.server.websocket._
 import org.http4s.websocket.WebsocketBits._
 import org.http4s.client.Client
 import org.http4s.server.blaze.BlazeBuilder
+import org.slf4j.LoggerFactory
 // circe
 import io.circe.syntax._
 import io.circe.generic.auto._
@@ -31,7 +32,10 @@ import scala.concurrent.duration._
 
 object Resource {
 
+  val log = LoggerFactory.getLogger(getClass)
+
   def build(port: Int, db: String, useragent: String)(implicit ec: ExecutionContext): Stream[IO, Nothing] = {
+    log.info("starting up")
     Stream.bracket[IO, ((Scheduler, IO[Unit]), Client[IO], HikariTransactor[IO]), Nothing](
       for {
         scheduler  <- Scheduler.allocate[IO](4)
@@ -73,6 +77,7 @@ object Resource {
             _ <- schedulerShutdown
             _ <- httpClient.shutdown
             _ <- xa.shutdown
+            _ <- IO { log.info("gracefully shutting down") }
           } yield ()
       }
     )
