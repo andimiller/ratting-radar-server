@@ -1,35 +1,37 @@
 package space.inyour.radar.server
 
-import eveapi.esi.client._
-import eveapi.esi.client.EsiClient._
-import eveapi.esi.api.CirceCodecs._
+// http4s
 import org.http4s.client.blaze.PooledHttp1Client
-import cats.effect._
-import io.circe.syntax._
-import io.circe.generic.auto._
-import cats.implicits._
 import org.http4s.HttpService
 import org.http4s.dsl._
 import org.http4s.server.websocket._
 import org.http4s.websocket.WebsocketBits._
+import org.http4s.client.Client
+import org.http4s.server.blaze.BlazeBuilder
+// circe
+import io.circe.syntax._
+import io.circe.generic.auto._
+// esi-client
+import eveapi.esi.client._
+import eveapi.esi.client.EsiClient._
+import eveapi.esi.api.CirceCodecs._
+import eveapi.esi.model.Get_universe_system_kills_200_ok
+// fs2
 import fs2._
-import fs2.{Scheduler, Stream}
-
-import scala.concurrent.duration._
-import scala.util.Properties.envOrNone
-import doobie._
+// cats
+import cats.implicits._
+import cats.effect._
+// doobie
 import doobie.hikari.HikariTransactor
 import doobie.implicits._
 import doobie.hikari.implicits._
-import eveapi.esi.model.Get_universe_system_kills_200_ok
-import org.http4s.client.Client
-import org.http4s.server.blaze.BlazeBuilder
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 object Resource {
 
-  def build(port: Int, db: String)(implicit ec: ExecutionContext): Stream[IO, Nothing] = {
+  def build(port: Int, db: String, useragent: String)(implicit ec: ExecutionContext): Stream[IO, Nothing] = {
     Stream.bracket[IO, ((Scheduler, IO[Unit]), Client[IO], HikariTransactor[IO]), Nothing](
       for {
         scheduler  <- Scheduler.allocate[IO](4)
@@ -40,7 +42,7 @@ object Resource {
       {
         case ((scheduler, _), httpClient, xa) =>
           for {
-            esiClient <- Stream.emit(new EsiClient[IO]("my esi client", httpClient.toHttpService))
+            esiClient <- Stream.emit(new EsiClient[IO](useragent, httpClient.toHttpService))
             topic     <- Stream.eval(async.topic[IO, List[(Get_universe_system_kills_200_ok, SDE.SolarSystem)]](List.empty))
             input <- Stream.emit(
               scheduler
