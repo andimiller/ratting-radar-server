@@ -3,9 +3,9 @@ package space.inyour.radar.server
 import cats.effect.IO
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.util.StreamApp
-import fs2._
+import scala.{Stream => _}
+import fs2.{Stream, Scheduler}
 import scala.util.Properties.envOrNone
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends StreamApp[IO] {
   val port: Int = envOrNone("HTTP_PORT").fold(8080)(_.toInt)

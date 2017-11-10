@@ -5,20 +5,14 @@ import eveapi.esi.client.EsiClient._
 import eveapi.esi.api.CirceCodecs._
 import org.http4s.client.blaze.PooledHttp1Client
 import cats.effect._
-import io.circe._
 import io.circe.syntax._
 import io.circe.generic.auto._
-import io.circe.java8.time._
-import cats.syntax.either._
-import cats.syntax._
 import cats.implicits._
 import org.http4s.HttpService
 import org.http4s.dsl._
-import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.server.websocket._
-import org.http4s.util.StreamApp
 import org.http4s.websocket.WebsocketBits._
-import fs2._
+import fs2._, fs2.{Stream, Scheduler}
 
 import scala.concurrent.duration._
 import scala.util.Properties.envOrNone
