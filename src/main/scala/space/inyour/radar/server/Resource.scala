@@ -12,7 +12,8 @@ import org.http4s.HttpService
 import org.http4s.dsl._
 import org.http4s.server.websocket._
 import org.http4s.websocket.WebsocketBits._
-import fs2._, fs2.{Stream, Scheduler}
+import fs2._
+import fs2.{Scheduler, Stream}
 
 import scala.concurrent.duration._
 import scala.util.Properties.envOrNone
@@ -21,13 +22,15 @@ import doobie.hikari.HikariTransactor
 import doobie.implicits._
 import doobie.hikari.implicits._
 import eveapi.esi.model.Get_universe_system_kills_200_ok
+import org.http4s.client.Client
+import org.http4s.server.blaze.BlazeBuilder
 
 import scala.concurrent.ExecutionContext
 
 object Resource {
 
   def build(port: Int, db: String)(implicit ec: ExecutionContext): Stream[IO, Nothing] = {
-    Stream.bracket(
+    Stream.bracket[IO, ((Scheduler, IO[Unit]), Client[IO], HikariTransactor[IO]), Nothing](
       for {
         scheduler  <- Scheduler.allocate[IO](4)
         httpClient <- IO { PooledHttp1Client[IO]() }
@@ -60,7 +63,7 @@ object Resource {
                     WS(topic.subscribe(10).map(x => Text(x.asJson.noSpaces)), fromClient)
                 }
               })
-            server <- BlazeBuilder[IO].bindHttp(port).withWebSockets(true).mountService(resource, "/").serve.concurrently(input)
+            server <- BlazeBuilder[IO].bindHttp(port).withWebSockets(true).mountService(resource, "/").serve.concurrently(input).asInstanceOf[Stream[IO, Nothing]]
           } yield server
       }, {
         case ((_, schedulerShutdown), httpClient, xa) =>

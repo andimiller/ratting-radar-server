@@ -6,6 +6,7 @@ import org.http4s.util.StreamApp
 import scala.{Stream => _}
 import fs2.{Stream, Scheduler}
 import scala.util.Properties.envOrNone
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends StreamApp[IO] {
   val port: Int = envOrNone("HTTP_PORT").fold(8080)(_.toInt)
