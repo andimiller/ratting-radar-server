@@ -9,18 +9,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends StreamApp[IO] {
   val port: Int = envOrNone("HTTP_PORT").fold(8080)(_.toInt)
+  val db: String = envOrNone("JDBC_URL").getOrElse("jdbc:sqlite:sqlite-latest.sqlite")
 
   override def stream(args: List[String], requestShutdown: IO[Unit]): Stream[IO, Nothing] =
-    for {
-      scheduler <- Stream.eval(IO { Scheduler[IO](corePoolSize = 8) })
-      resource  <- Resource.build(scheduler)
-      server <- Scheduler[IO](corePoolSize = 8).flatMap { scheduler =>
-        BlazeBuilder[IO]
-          .bindHttp(port)
-          .withWebSockets(true)
-          .mountService(resource, "/")
-          .serve
-      }
-    } yield (server)
-
+     Resource.build(port, db)
 }
