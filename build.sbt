@@ -18,3 +18,22 @@ libraryDependencies ++= Seq(
   "org.slf4j"    % "slf4j-simple"         % "1.7.25",
   "org.xerial"   % "sqlite-jdbc"          % "3.20.1"
 )
+
+enablePlugins(DockerPlugin)
+
+dockerfile in docker := {
+  val artifact: File     = assembly.value
+  val artifactTargetPath = s"/app/${artifact.name}"
+  val db: File           = (baseDirectory.value / "sqlite-latest.sqlite")
+
+  new Dockerfile {
+    from("openjdk:8-slim")
+    add(artifact, artifactTargetPath)
+    add(db, "/sqlite-latest.sqlite")
+    env("HTTP_PORT", "8080")
+    env("JDBC_URL", "jdbc:sqlite:/sqlite-latest.sqlite")
+    env("ESI_USERAGENT", "ratting-radar-server")
+    expose(8080)
+    entryPoint("java", "-jar", artifactTargetPath)
+  }
+}
