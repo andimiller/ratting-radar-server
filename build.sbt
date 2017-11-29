@@ -18,8 +18,6 @@ libraryDependencies ++= Seq(
   "org.xerial"   % "sqlite-jdbc"          % "3.20.1"
 )
 
-enablePlugins(DockerPlugin)
-
 dockerfile in docker := {
   val artifact: File     = assembly.value
   val artifactTargetPath = s"/app/${artifact.name}"
@@ -44,6 +42,7 @@ imageNames in docker := Seq(
 
 
 import ReleaseTransformations._
+
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,              // : ReleaseStep
   inquireVersions,                        // : ReleaseStep
@@ -52,7 +51,7 @@ releaseProcess := Seq[ReleaseStep](
   setReleaseVersion,                      // : ReleaseStep
   commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
   tagRelease,                             // : ReleaseStep
-  docker,
+  ReleaseStep(releaseStepTask(publish in Docker)),
   setNextVersion,                         // : ReleaseStep
   commitNextVersion,                      // : ReleaseStep
   pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
