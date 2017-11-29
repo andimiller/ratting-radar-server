@@ -1,6 +1,5 @@
 organization := "space.inyour"
 name := "ratting-radar-server"
-version := "0.0.1-SNAPSHOT"
 scalaVersion := "2.11.8"
 
 resolvers += Resolver.jcenterRepo
@@ -37,3 +36,24 @@ dockerfile in docker := {
     entryPoint("java", "-jar", artifactTargetPath)
   }
 }
+
+imageNames in docker := Seq(
+  ImageName(s"andimiller/${name.value}:latest"),
+  ImageName(s"andimiller/${name.value}:${version.value}")
+)
+
+
+import ReleaseTransformations._
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,              // : ReleaseStep
+  inquireVersions,                        // : ReleaseStep
+  runClean,                               // : ReleaseStep
+  runTest,                                // : ReleaseStep
+  setReleaseVersion,                      // : ReleaseStep
+  commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
+  tagRelease,                             // : ReleaseStep
+  docker,
+  setNextVersion,                         // : ReleaseStep
+  commitNextVersion,                      // : ReleaseStep
+  pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
+)
