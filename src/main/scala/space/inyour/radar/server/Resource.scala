@@ -69,7 +69,7 @@ object Resource {
                     WS(topic.subscribe(10).map(x => Text(x.asJson.noSpaces)), fromClient)
                 }
               })
-            server <- BlazeBuilder[IO].bindHttp(port).withWebSockets(true).mountService(resource, "/").serve.concurrently(input).asInstanceOf[Stream[IO, Nothing]]
+            server <- BlazeBuilder[IO].bindHttp(port, "0.0.0.0").withWebSockets(true).mountService(resource, "/").serve.concurrently(input).asInstanceOf[Stream[IO, Nothing]]
           } yield server
       }, {
         case ((_, schedulerShutdown), httpClient, xa) =>
